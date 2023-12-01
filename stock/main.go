@@ -10,6 +10,7 @@ import (
 	"github.com/pmorelli92/bunnify/bunnify"
 	"github.com/pmorelli92/open-telemetry-go/utils"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func main() {
@@ -50,7 +51,11 @@ func main() {
 func checkoutProcessedHandler(ctx context.Context, event bunnify.ConsumableEvent[any]) error {
 	// Create a new span
 	tr := otel.Tracer("amqp")
-	_, messageSpan := tr.Start(ctx, "AMQP - consume - checkout.processed")
+	_, messageSpan := tr.Start(
+		ctx,
+		"AMQP - consume - checkout.processed", // span name
+		trace.WithSpanKind(trace.SpanKindConsumer),
+	)
 	defer messageSpan.End()
 
 	// Imaginary processing time

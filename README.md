@@ -6,6 +6,14 @@ You can find the two-series-post with the step by step [here](https://devandchil
 
 ## How to run
 
+Create a .env file in the root directory to send traces to Splunk Observability Cloud:
+
+```
+SPLUNK_REALM=<your realm i.e. us0, us1, etc.>
+SPLUNK_ACCESS_TOKEN=<your acces token>
+SPLUNK_MEMORY_TOTAL_MIB=1024
+```
+
 Start services:
 
 ```
@@ -18,8 +26,9 @@ Produce a trace:
 curl -X POST localhost:8081/api/checkout
 ```
 
-## How does it look in Jaeger
+## How does it look in Splunk Observability Cloud
 
-<img src="example.png">
+<img src="splunk-observability-cloud-service-map.png">
 
-You can explore traces on: http://localhost:16686/search
+<img src="splunk-observability-cloud-trace.png">
+

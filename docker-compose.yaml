@@ -1,10 +1,21 @@
 version: "3.9"
 services:
-  jaeger:
-    image: "jaegertracing/all-in-one:latest"
+  splunk-otel-collector:
+    image: quay.io/signalfx/splunk-otel-collector:0.81.1
+    environment:
+      - SPLUNK_ACCESS_TOKEN=${SPLUNK_ACCESS_TOKEN}
+      - SPLUNK_REALM=${SPLUNK_REALM}
     ports:
-      - "16686:16686"
+      - "13133:13133"
+      - "14250:14250"
+      - "14268:14268"
+      - "4317:4317"
       - "4318:4318"
+      - "6060:6060"
+      - "8888:8888"
+      - "9080:9080"
+      - "9411:9411"
+      - "9943:9943"
   rabbitmq:
     image: "rabbitmq:3-management"
     ports:
@@ -17,14 +28,15 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - JAEGER_ENDPOINT=jaeger:4318
+      - JAEGER_ENDPOINT=splunk-otel-collector:4318
       - GRPC_ADDRESS=checkout:8080
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - OTEL_SERVICE_NAME=checkout
     depends_on:
-      - jaeger
+      - splunk-otel-collector
       - rabbitmq
   gateway:
     build:
@@ -33,22 +45,24 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - JAEGER_ENDPOINT=jaeger:4318
+      - JAEGER_ENDPOINT=splunk-otel-collector:4318
       - CHECKOUT_SERVICE_ADDRESS=checkout:8080
       - HTTP_ADDRESS=:8081
+      - OTEL_SERVICE_NAME=gateway
     depends_on:
-      - jaeger
+      - splunk-otel-collector
       - checkout
   stock:
     build:
       context: stock
     restart: on-failure
     environment:
-      - JAEGER_ENDPOINT=jaeger:4318
+      - JAEGER_ENDPOINT=splunk-otel-collector:4318
       - RABBITMQ_USER=guest
       - RABBITMQ_PASS=guest
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
+      - OTEL_SERVICE_NAME=stock
     depends_on:
-      - jaeger
+      - splunk-otel-collector
       - rabbitmq

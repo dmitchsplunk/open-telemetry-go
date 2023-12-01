@@ -11,6 +11,7 @@ import (
 	"github.com/pmorelli92/open-telemetry-go/utils"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
@@ -63,7 +64,17 @@ func (s *server) DoCheckout(ctx context.Context, rq *pb.CheckoutRequest) (*pb.Ch
 
 	// Create a new span (child of the trace id) to inform the publishing of the message
 	tr := otel.Tracer("amqp")
-	amqpContext, messageSpan := tr.Start(ctx, fmt.Sprintf("AMQP - publish - %s", messageName))
+	amqpContext, messageSpan := tr.Start(
+		ctx,
+		fmt.Sprintf("AMQP - publish - %s", messageName), // span name
+		trace.WithSpanKind(trace.SpanKindProducer),
+		trace.WithAttributes(
+			semconv.MessagingSystem("rabbitmq"),
+			semconv.MessagingOperationPublish,
+			semconv.MessagingDestinationName("exchange"),
+		),
+	)
+
 	defer messageSpan.End()
 
 	err := s.publisher.Publish(
